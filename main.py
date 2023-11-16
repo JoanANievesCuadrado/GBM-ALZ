@@ -2,11 +2,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from mpl_toolkits.mplot3d import Axes3D
 from pathlib import Path
 from scipy.stats.mstats import gmean
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Union
 
+
+normal_color = 'dodgerblue'
+tumor_color = 'orangered'
+old_color = 'blue'
+alz_color = 'red'
 
 gbm_sample_path: Path = Path(r'data/TCGA-GBM')
 gbm_path: Path = gbm_sample_path / 'data'
@@ -85,14 +89,15 @@ def get_filters(genes_id: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarra
     # Loading the modified rows_genes file with the ensembl ids
     rows_genes = pd.read_excel(alz_path / 'rows_genes2.xlsx')
 
-    # Getting valids ensembl ids
+    # Get valids ensembl ids
     ensembls_id = rows_genes.ensembl.dropna()
 
-    # Getting the index for alz data
-    index_oa = ensembls_id.index.to_numpy()
+    # Auxuliar dataframe for to get the the normal and tumor indices
+    df1 = pd.DataFrame(data={'i': range(genes_id.size)}, index=genes_id)
 
-    # Getting the index for gbm data
-    _, index_nt = np.where(genes_id == ensembls_id.to_numpy()[:, np.newaxis])
+    # Get the indices
+    index_oa = ensembls_id.index.to_numpy()
+    index_nt = df1.loc[ensembls_id, 'i'].to_numpy()
 
     # Getting corresponding symbols
     symbols = rows_genes.loc[index_oa, 'gene_symbol']
@@ -101,164 +106,114 @@ def get_filters(genes_id: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarra
 
 
 def save_n_comp(fname: str, vect: np.ndarray, genes: np.ndarray, n: Optional[int] = None) -> None:
-    n = n or len(vect)    
-    folder: Path = outputpath / f'comp_{n}'
-    if not folder.is_dir():
-        folder.mkdir()
+    n = n or len(vect)  
 
     args: np.ndarray = np.argsort(-np.abs(vect))
-    file = open(folder / f'{fname}_{n}.txt', 'w')
+    file = open(fname, 'w')
 
     for arg in args[:n]:
-        file.write('{:<10}\t{}\n'.format(genes[arg], str(vect[arg])))
+        file.write(f'{genes[arg]}\t{vect[arg]}\n')
     file.close()
 
 
-def geometry_analysis(tumor: np.ndarray, old: np.ndarray, alz: np.ndarray, genes: np.array) -> None:
-    # Vector to the center of each cloud
-    T_mean: np.ndarray = np.mean(tumor, axis=0)
-    O_mean: np.ndarray = np.mean(old, axis=0)
-    A_mean: np.ndarray = np.mean(alz, axis=0)
+def figure_1c(normal: np.ndarray, tumor: np.ndarray, old: np.ndarray, alz: np.ndarray, outputpath: Path):
+    normal_center = normal.mean(axis=1)
+    tumor_center = tumor.mean(axis=1)
+    old_center = old.mean(axis=1)
+    alz_center = alz.mean(axis=1)
 
-    # Distance to the center of each cloud
-    T_norm: float = np.linalg.norm(T_mean)
-    O_norm: float = np.linalg.norm(O_mean)
-    A_norm: float = np.linalg.norm(A_mean)
+    fig1c, ax1c = plt.subplots()
 
-    # Angle between clouds
-    T_O_angle: float = np.arccos(np.dot(T_mean, O_mean)/(T_norm * O_norm))
-    T_A_angle: float = np.arccos(np.dot(T_mean, A_mean)/(T_norm * A_norm))
-    A_O_angle: float = np.arccos(np.dot(A_mean, O_mean)/(A_norm * O_norm))
+    ax1c.scatter(*normal_center, marker='o', c=normal_color, s=50, label='N')
+    ax1c.scatter(*tumor_center, marker='o', c=tumor_color, s=50, label='GBM')
+    ax1c.scatter(*old_center, marker='o', c=old_color, s=50, label='O')
+    ax1c.scatter(*alz_center, marker='o', c=alz_color, s=50, label='AD')
 
-    # Vector and distance from old to alz cloud
-    OA_vec = A_mean - O_mean
-    OA_norm = np.linalg.norm(OA_vec)
-    OA_vec = OA_vec / OA_norm
+    # Arrow from normal to tumor center
+    ax1c.annotate('', xy=tumor_center, xytext=normal_center,
+                  arrowprops=dict(arrowstyle='->', shrinkA=4.5, shrinkB=3.9,
+                                  connectionstyle="arc, angleA=-1, armA=0,"
+                                  "angleB=100, armB=60, rad=50"))
 
-    # Constructing an orthonormal basis with the vectors of the center of each cloud (Gram-Schmidt)
-    T_mean = T_mean/T_norm
+    # Arrow from normal to old center
+    ax1c.annotate('', xy=old_center, xytext=normal_center,
+                  arrowprops=dict(arrowstyle='->', shrinkA=4.5, shrinkB=3.9,
+                                  connectionstyle="arc, angleA=1, armA=0,"
+                                  "angleB=-100, armB=90, rad=80"))
 
-    dummy: np.ndarray = A_mean - np.dot(A_mean, T_mean)*T_mean
-    dummy_norm: float = np.linalg.norm(dummy)
-    A_mean = dummy/dummy_norm
+    # Arrow from normal to alzheimer center
+    ax1c.annotate('', xy=alz_center, xytext=normal_center,
+                  arrowprops=dict(arrowstyle='->', shrinkA=4.5, shrinkB=3.9,
+                                  connectionstyle="arc, angleA=2, armA=0,"
+                                  "angleB=-115, armB=90, rad=90"))
+    
+    # Arrow from old to alzheimer center
+    ax1c.annotate('', xy=alz_center, xytext=old_center,
+                  arrowprops=dict(arrowstyle='->', shrinkA=4.5, shrinkB=3.9))
+    
+    ax1c.annotate('N', xy=normal_center + (-4, -10),
+                  c='k',  size=12, va='top', ha='right', weight='bold')
 
-    dummyV: np.ndarray = O_mean - np.dot(O_mean, T_mean)*T_mean - np.dot(O_mean, A_mean)*A_mean
-    dummyV_norm: float = np.linalg.norm(dummyV)
-    O_mean = dummyV/dummyV_norm
+    ax1c.annotate('GBM', xy=tumor_center + (-10, 25),
+                  c='k', size=12, va='top', ha='right', weight='bold')
 
-    # Project the data onto the new base
-    N_T_point: np.ndarray = np.dot(normal, T_mean)
-    T_T_point: np.ndarray = np.dot(tumor, T_mean)
-    O_T_point: np.ndarray = np.dot(old, T_mean)
-    A_T_point: np.ndarray = np.dot(alz, T_mean)
+    ax1c.annotate('O', xy=old_center + (10, -12),
+                  c='k',  size=12, va='center', ha='left',  weight='bold')
 
-    N_A_point: np.ndarray = np.dot(normal, A_mean)
-    T_A_point: np.ndarray = np.dot(tumor, A_mean)
-    O_A_point: np.ndarray = np.dot(old, A_mean)
-    A_A_point: np.ndarray = np.dot(alz, A_mean)
+    ax1c.annotate('AD', xy=alz_center + (-15, 0),
+                  c='k', size=12, va='top', ha='right', weight='bold')
 
-    N_O_point: np.ndarray = np.dot(normal, O_mean)
-    T_O_point: np.ndarray = np.dot(tumor, O_mean)
-    V_O_point: np.ndarray = np.dot(old, O_mean)
-    A_O_point: np.ndarray = np.dot(alz, O_mean)
+    ax1c.annotate('Early\nAD',  xy=alz_center/2 + (50, 15), weight='bold')
 
-    # Plots
-    # Alzheimer vs. Tumor
-    fig, ax = plt.subplots()
+    # ax1c.text(285, 75, "Aging", ha='left', va='top', weight='bold')
+    ax1c.annotate('Aging', xy=old_center/2 + (130, -5), weight='bold', ha='right', va='bottom')
 
-    ax.scatter(N_T_point, N_A_point, label = 'N')
-    ax.scatter(T_T_point, T_A_point, label = 'GBM')
-    ax.scatter(O_T_point, O_A_point, label = 'O')
-    ax.scatter(A_T_point, A_A_point, label = 'Alz')
+    ax1c.text(*((old_center + alz_center)/2 + (-5, 15)), 
+              'Late AD', va='bottom', ha='center', weight='bold')
 
-    ax.set_title('Alz vs. GBM')
-    ax.grid()
-    ax.set_xlabel('GBM')
-    ax.set_ylabel('Alz')
-    ax.legend()
+    ax1c.grid()
+    ax1c.set_xlabel('PC1')
+    ax1c.set_ylabel('PC2')
+    ax1c.set_title('c')
+    ax1c.set(xlim=(-20, 270), ylim=(-180, 290))
 
-    # Alzheimer vs. Old
-    fig2, ax2 = plt.subplots()
-    ax2.scatter(N_O_point, N_A_point, label = 'N')
-    ax2.scatter(T_O_point, T_A_point, label = 'GBM')
-    ax2.scatter(V_O_point, O_A_point, label = 'O')
-    ax2.scatter(A_O_point, A_A_point, label = 'Alz')
-
-    ax2.set_title('Alz vs. O')
-    ax2.grid()
-    ax2.set_xlabel('O')
-    ax2.set_ylabel('Alz')
-    ax2.legend()
-
-    # Old vs. Tumor
-    fig3, ax3 = plt.subplots()
-    ax3.scatter(N_T_point, N_O_point, label = 'N')
-    ax3.scatter(T_T_point, T_O_point, label = 'GBM')
-    ax3.scatter(O_T_point, V_O_point, label = 'O')
-    ax3.scatter(A_T_point, A_O_point, label = 'Alz')
-
-    ax3.set_title('O vs. GBM')
-    ax3.grid()
-    ax3.set_xlabel('GBM')
-    ax3.set_ylabel('O')
-    ax3.legend()
-
-    # 3D plot
-    fig4 = plt.figure()
-    ax4 = fig4.add_subplot(projection='3d')
-
-    ax4.scatter(N_T_point, N_A_point, N_O_point, label = 'N')
-    ax4.scatter(T_T_point, T_A_point, T_O_point, label = 'GBM')
-    ax4.scatter(O_T_point, O_A_point, V_O_point, label = 'O')
-    ax4.scatter(A_T_point, A_A_point, A_O_point, label = 'Alz')
-
-    ax4.set_title('Alz vs. GBM vs. O')
-    ax4.grid()
-    ax4.set_xlabel('GBM')
-    ax4.set_ylabel('Alz')
-    ax4.set_zlabel('O')
-    ax4.legend()
-
-    # Export data
-    outputpath2: Path = outputpath / 'geometry_analysis'
-    if not outputpath2.is_dir():
-        outputpath2.mkdir()
-
-    np.savetxt(outputpath2 / 'T_mean.txt', T_mean)
-    np.savetxt(outputpath2 / 'O_mean.txt', O_mean)
-    np.savetxt(outputpath2 / 'A_mean.txt', A_mean)
-    np.savetxt(outputpath2 / 'OA_vec.txt', OA_vec)
-
-    np.savetxt(outputpath2 / 'T_norm.txt', [T_norm])
-    np.savetxt(outputpath2 / 'O_norm.txt', [O_norm])
-    np.savetxt(outputpath2 / 'A_norm.txt', [A_norm])
-    np.savetxt(outputpath2 / 'OA_norm.txt', [OA_norm])
-
-    np.savetxt(outputpath2 / 'T_O_angle.txt', [T_O_angle])
-    np.savetxt(outputpath2 / 'T_A_angle.txt', [T_A_angle])
-    np.savetxt(outputpath2 / 'A_O_angle.txt', [A_O_angle])
-
-    np.savetxt(outputpath2 / 'N.txt', normal)
-    np.savetxt(outputpath2 / 'T.txt', tumor)
-    np.savetxt(outputpath2 / 'O.txt', old)
-    np.savetxt(outputpath2 / 'A.txt', alz)
-
-    np.savetxt(outputpath2 / 'T_mean_no_normalized.txt', T_norm*T_mean)
-    np.savetxt(outputpath2 / 'A_mean_no_normalized.txt', dummy)
-    np.savetxt(outputpath2 / 'O_mean_no_normalized.txt', dummyV)
-
-    fig.savefig(outputpath2 / 'A_vs_T.png')
-    fig2.savefig(outputpath2 / 'A_vs_V.png')
-    fig3.savefig(outputpath2 / 'V_vs_T.png')
-    fig4.savefig(outputpath2 / 'T_V_A.png')
-
-    save_n_comp('T_mean', T_mean, genes, 100)
-    save_n_comp('O_mean', O_mean, genes, 100)
-    save_n_comp('A_mean', A_mean, genes, 100)
-    save_n_comp('OA_vec', OA_vec, genes, 100)
+    fig1c.savefig(outputpath / 'Fig_1c.pdf',  bbox_inches='tight')
 
 
-def pca_analysis(normal: np.ndarray, tumor: np.ndarray, old: np.ndarray, alz: np.ndarray, genes: np.ndarray) -> None:
+def normal_dist(x: Union[float, np.ndarray],
+                        x_mean: Union[float, np.ndarray],
+                        sigma: Union[float, np.ndarray]
+                        ) -> Union[float, np.ndarray]:
+    return np.exp(-np.power(x - x_mean, 2) / (2 * sigma*2))
+
+
+def figure_1d(normal: np.ndarray, tumor: np.ndarray, alz: np.ndarray, outputpath: Path):
+    x = np.linspace(-180, 400, 100)
+    y = np.linspace(-250, 330, 100)
+    X, Y = np.meshgrid(x, y)
+    normal_center, normal_std = normal.mean(axis=1), 150*normal.std(axis=1)
+    tumor_center, tumor_std = tumor.mean(axis=1), 70*tumor.std(axis=1)
+    alz_center, alz_std = alz.mean(axis=1), 100*alz.std(axis=1)
+
+    Z_normal = normal_dist(X, normal_center[0], normal_std[0]) * normal_dist(Y, normal_center[1], normal_std[1])
+    Z_tumor = normal_dist(X, tumor_center[0], tumor_std[0]) * normal_dist(Y, tumor_center[1], tumor_std[1])
+    Z_alz = normal_dist(X, alz_center[0], alz_std[0]) * normal_dist(Y, alz_center[1], alz_std[1])
+
+    Z = 15 * Z_normal + 30 * Z_tumor + 3 * Z_alz
+
+    fig1d, ax1d = plt.subplots()
+
+    ax1d.contour(X, Y, Z, levels=80, cmap='gray')
+    
+    ax1d.set_title('d')
+    ax1d.set_xlabel('PC1')
+    ax1d.set_ylabel('PC2')
+
+    fig1d.savefig(outputpath / 'Fig_1d.pdf', bbox_inches='tight')
+
+
+def pca_analysis(normal: np.ndarray, tumor: np.ndarray,
+                 old: np.ndarray, alz: np.ndarray, genes: np.ndarray) -> None:
     data: np.ndarray = np.concatenate((normal, tumor, old, alz))
     U, s, Vt = np.linalg.svd(data, full_matrices=False)
     eigenvalues: np.ndarray = s**2/data.shape[0]
@@ -266,67 +221,63 @@ def pca_analysis(normal: np.ndarray, tumor: np.ndarray, old: np.ndarray, alz: np
     eigenvectors: np.ndarray= Vt
     projection: np.ndarray = np.dot(Vt, data.T)
 
+    i1 = normal.shape[0]
+    i2 = i1 + tumor.shape[0]
+    i3 = i2 + old.shape[0]
+    
     # Figures
-    fig_pca, ax_pca = plt.subplots()
+    # Fig 1a (PC1-PC2)
+    fig1a, ax1a = plt.subplots()
 
-    a1 = normal.shape[0]
-    a2 = a1 + tumor.shape[0]
-    a3 = a2 + old.shape[0]
-    ax_pca.scatter(projection[0, :a1], projection[1, :a1], s=15, label="N")
-    ax_pca.scatter(projection[0, a1:a2], projection[1, a1:a2], s=15, label="GBM")
-    ax_pca.scatter(projection[0, a2:a3], projection[1, a2:a3], s=15, label="O")
-    ax_pca.scatter(projection[0, a3:], projection[1, a3:], s=15, label="Alz")
+    ax1a.scatter(projection[0, :i1], projection[1, :i1], s=15, label="N", c=normal_color)
+    ax1a.scatter(projection[0, i1:i2], projection[1, i1:i2], s=15, label="GBM", c=tumor_color)
+    ax1a.scatter(projection[0, i2:i3], projection[1, i2:i3], s=15, label="O", c=old_color)
+    ax1a.scatter(projection[0, i3:], projection[1, i3:], s=15, label="AD", c=alz_color)
 
-    ax_pca.set_title('PC1 vs. PC2')
-    ax_pca.grid()
-    ax_pca.set_xlabel(f'PC1 ({eigenvalues_normalized[0]*100:.2f} %)')
-    ax_pca.set_ylabel(f'PC2 ({eigenvalues_normalized[1]*100:.2f} %)')
-    ax_pca.legend()
+    ax1a.set_title('a')
+    ax1a.grid()
+    ax1a.set_xlabel(f'PC1 ({eigenvalues_normalized[0]*100:.2f} %)')
+    ax1a.set_ylabel(f'PC2 ({eigenvalues_normalized[1]*100:.2f} %)')
+    ax1a.legend()
 
-    # 3D plot
-    fig3d = plt.figure()
-    ax3d = fig3d.add_subplot(projection='3d')
+    # Fig 1b (PC3-PC2)
+    fig1b, ax1b = plt.subplots()
 
-    ax3d.scatter(projection[0, :a1], projection[1, :a1], projection[2, :a1], label = 'N')
-    ax3d.scatter(projection[0, a1:a2], projection[1, a1:a2], projection[2, a1:a2], label = 'GBM')
-    ax3d.scatter(projection[0, a2:a3], projection[1, a2:a3], projection[2, a2:a3], label = 'O')
-    ax3d.scatter(projection[0, a3:], projection[1, a3:], projection[2, a3:], label = 'Alz')
+    ax1b.scatter(projection[2, :i1], projection[1, :i1], s=15, label="N", c=normal_color)
+    ax1b.scatter(projection[2, i1:i2], projection[1, i1:i2], s=15, label="GBM", c=tumor_color)
+    ax1b.scatter(projection[2, i2:i3], projection[1, i2:i3], s=15, label="O", c=old_color)
+    ax1b.scatter(projection[2, i3:], projection[1, i3:], s=15, label="AD", c=alz_color)
 
-    ax3d.set_title('PC1 vs. PC2 vs. PC3')
-    ax3d.grid()
-    ax3d.set_xlabel(f'PC1 ({eigenvalues_normalized[0]*100:.2f} %)')
-    ax3d.set_ylabel(f'PC2 ({eigenvalues_normalized[1]*100:.2f} %)')
-    ax3d.set_zlabel(f'PC3 ({eigenvalues_normalized[2]*100:.2f} %)')
-    ax3d.legend()
+    ax1b.set_title('b')
+    ax1b.grid()
+    ax1b.set_xlabel(f'PC3 ({eigenvalues_normalized[2]*100:.2f} %)')
+    ax1b.set_ylabel(f'PC2 ({eigenvalues_normalized[1]*100:.2f} %)')
+    ax1b.legend()
+
+    # Fig 1c
+    figure_1c(projection[:2, :i1], projection[:2, i1:i2],
+              projection[:2, i2:i3], projection[:2, i3:], outputpath)
+    
+    # Fig 1d
+    figure_1d(projection[:2, :i1], projection[:2, i1:i2], projection[:2, i3:],
+              outputpath)
 
     # Exporting data
-    outputpath2: Path = outputpath / 'pca_analysis'
-    if not outputpath2.is_dir():
-        outputpath2.mkdir()
-    fig_pca.savefig(outputpath2 / 'PC1_PC2.png')
-    fig_pca.savefig(outputpath2 / 'PC1_PC2.pdf')
-    fig3d.savefig(outputpath2 / 'PC1_PC2_PC3.png')
-    fig3d.savefig(outputpath2 / 'PC1_PC2_PC3.pdf')
-    np.savetxt(outputpath2 / 'eigenvalues.txt', eigenvalues)
-    np.savetxt(outputpath2 / 'eigenvalues_normalized.txt', eigenvalues_normalized)
-    np.savetxt(outputpath2 / 'eigenvectors.txt', eigenvectors)
-    np.savetxt(outputpath2 / 'projection.txt', projection)
+    fig1a.savefig(outputpath / 'Fig_1a.pdf', bbox_inches='tight')
+    fig1b.savefig(outputpath / 'Fig_1b.pdf', bbox_inches='tight')
 
-    save_n_comp('PC1', eigenvectors[0], genes, 100)
-    save_n_comp('PC2', eigenvectors[1], genes, 100)
-    save_n_comp('PC3', eigenvectors[2], genes, 100)
+    save_n_comp(outputpath / 'PC1.txt', eigenvectors[0], genes, 100)
+    save_n_comp(outputpath / 'PC2.txt', eigenvectors[1], genes, 100)
+    save_n_comp(outputpath / 'PC3.txt', eigenvectors[2], genes, 100)
 
 
-if __name__ == "__main__":
+def main():
     # Loading data
     normal, tumor, genes_id = read_gbm_data()
     old, alz = read_alz_data()
 
     # Getting filters and gene symbols
     index_nt, index_oa, symbols = get_filters(genes_id)
-    np.savetxt(outputpath / 'index_nt.txt', index_nt, fmt='%d')
-    np.savetxt(outputpath / 'index_oa.txt', index_oa, fmt='%d')
-    np.savetxt(outputpath / 'symbols.txt', symbols, fmt='%s')
 
     normal = normal[:, index_nt]
     tumor = tumor[:, index_nt]
@@ -346,6 +297,10 @@ if __name__ == "__main__":
     old = np.log2(old / ref)
     alz = np.log2(alz / ref)
 
-    geometry_analysis(tumor, old, alz, symbols)
+    # geometry_analysis(normal, tumor, old, alz, symbols)
     pca_analysis(normal, tumor, old, alz, symbols)
     plt.show()
+
+
+if __name__ == "__main__":
+    main()
