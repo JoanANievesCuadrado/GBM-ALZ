@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 
 from pathlib import Path
 from scipy.stats.mstats import gmean
@@ -116,68 +117,67 @@ def save_n_comp(fname: str, vect: np.ndarray, genes: np.ndarray, n: Optional[int
     file.close()
 
 
-def figure_1c(normal: np.ndarray, tumor: np.ndarray, old: np.ndarray, alz: np.ndarray, outputpath: Path):
+def figure_1b(normal: np.ndarray, tumor: np.ndarray, old: np.ndarray, alz: np.ndarray, outputpath: Path):
     normal_center = normal.mean(axis=1)
     tumor_center = tumor.mean(axis=1)
     old_center = old.mean(axis=1)
     alz_center = alz.mean(axis=1)
 
-    fig1c, ax1c = plt.subplots()
+    fig1b, ax1b = plt.subplots()
 
-    ax1c.scatter(*normal_center, marker='o', c=normal_color, s=50, label='N')
-    ax1c.scatter(*tumor_center, marker='o', c=tumor_color, s=50, label='GBM')
-    ax1c.scatter(*old_center, marker='o', c=old_color, s=50, label='O')
-    ax1c.scatter(*alz_center, marker='o', c=alz_color, s=50, label='AD')
+    ax1b.scatter(*normal_center, marker='o', c=normal_color, s=50, label='N')
+    ax1b.scatter(*tumor_center, marker='o', c=tumor_color, s=50, label='GBM')
+    ax1b.scatter(*old_center, marker='o', c=old_color, s=50, label='O')
+    ax1b.scatter(*alz_center, marker='o', c=alz_color, s=50, label='AD')
 
     # Arrow from normal to tumor center
-    ax1c.annotate('', xy=tumor_center, xytext=normal_center,
+    ax1b.annotate('', xy=tumor_center, xytext=normal_center,
                   arrowprops=dict(arrowstyle='->', shrinkA=4.5, shrinkB=3.9,
                                   connectionstyle="arc, angleA=-1, armA=0,"
                                   "angleB=100, armB=60, rad=50"))
 
     # Arrow from normal to old center
-    ax1c.annotate('', xy=old_center, xytext=normal_center,
+    ax1b.annotate('', xy=old_center, xytext=normal_center,
                   arrowprops=dict(arrowstyle='->', shrinkA=4.5, shrinkB=3.9,
                                   connectionstyle="arc, angleA=1, armA=0,"
                                   "angleB=-100, armB=90, rad=80"))
 
     # Arrow from normal to alzheimer center
-    ax1c.annotate('', xy=alz_center, xytext=normal_center,
+    ax1b.annotate('', xy=alz_center, xytext=normal_center,
                   arrowprops=dict(arrowstyle='->', shrinkA=4.5, shrinkB=3.9,
                                   connectionstyle="arc, angleA=2, armA=0,"
                                   "angleB=-115, armB=90, rad=90"))
     
     # Arrow from old to alzheimer center
-    ax1c.annotate('', xy=alz_center, xytext=old_center,
+    ax1b.annotate('', xy=alz_center, xytext=old_center,
                   arrowprops=dict(arrowstyle='->', shrinkA=4.5, shrinkB=3.9))
     
-    ax1c.annotate('N', xy=normal_center + (-4, -10),
+    ax1b.annotate('N', xy=normal_center + (-4, -10),
                   c='k',  size=12, va='top', ha='right', weight='bold')
 
-    ax1c.annotate('GBM', xy=tumor_center + (-10, 25),
+    ax1b.annotate('GBM', xy=tumor_center + (-10, 25),
                   c='k', size=12, va='top', ha='right', weight='bold')
 
-    ax1c.annotate('O', xy=old_center + (10, -12),
+    ax1b.annotate('O', xy=old_center + (10, -12),
                   c='k',  size=12, va='center', ha='left',  weight='bold')
 
-    ax1c.annotate('AD', xy=alz_center + (-15, 0),
+    ax1b.annotate('AD', xy=alz_center + (-15, 0),
                   c='k', size=12, va='top', ha='right', weight='bold')
 
-    ax1c.annotate('Early\nAD',  xy=alz_center/2 + (50, 15), weight='bold')
+    ax1b.annotate('Early\nAD',  xy=alz_center/2 + (50, 15), weight='bold')
 
-    # ax1c.text(285, 75, "Aging", ha='left', va='top', weight='bold')
-    ax1c.annotate('Aging', xy=old_center/2 + (130, -5), weight='bold', ha='right', va='bottom')
+    # ax1b.text(285, 75, "Aging", ha='left', va='top', weight='bold')
+    ax1b.annotate('Aging', xy=old_center/2 + (130, -5), weight='bold', ha='right', va='bottom')
 
-    ax1c.text(*((old_center + alz_center)/2 + (-5, 15)), 
+    ax1b.text(*((old_center + alz_center)/2 + (-5, 15)), 
               'Late AD', va='bottom', ha='center', weight='bold')
 
-    ax1c.grid()
-    ax1c.set_xlabel('PC1')
-    ax1c.set_ylabel('PC2')
-    ax1c.set_title('c')
-    ax1c.set(xlim=(-20, 270), ylim=(-180, 290))
+    ax1b.set_xlabel('PC1')
+    ax1b.set_ylabel('PC2')
+    ax1b.set_title('c')
+    ax1b.set(xlim=(-20, 270), ylim=(-180, 290))
 
-    fig1c.savefig(outputpath / 'Fig_1c.pdf',  bbox_inches='tight')
+    fig1b.savefig(outputpath / 'Fig_1b.pdf',  bbox_inches='tight')
 
 
 def normal_dist(x: Union[float, np.ndarray],
@@ -187,7 +187,7 @@ def normal_dist(x: Union[float, np.ndarray],
     return np.exp(-np.power(x - x_mean, 2) / (2 * sigma*2))
 
 
-def figure_1d(normal: np.ndarray, tumor: np.ndarray, alz: np.ndarray, outputpath: Path):
+def figure_1c(normal: np.ndarray, tumor: np.ndarray, alz: np.ndarray, outputpath: Path):
     x = np.linspace(-180, 400, 100)
     y = np.linspace(-250, 330, 100)
     X, Y = np.meshgrid(x, y)
@@ -201,15 +201,15 @@ def figure_1d(normal: np.ndarray, tumor: np.ndarray, alz: np.ndarray, outputpath
 
     Z = 15 * Z_normal + 30 * Z_tumor + 3 * Z_alz
 
-    fig1d, ax1d = plt.subplots()
+    fig1c, ax1c = plt.subplots()
 
-    ax1d.contour(X, Y, Z, levels=80, cmap='gray')
+    ax1c.contour(X, Y, Z, levels=80, cmap='gray')
     
-    ax1d.set_title('d')
-    ax1d.set_xlabel('PC1')
-    ax1d.set_ylabel('PC2')
+    ax1c.set_title('d')
+    ax1c.set_xlabel('PC1')
+    ax1c.set_ylabel('PC2')
 
-    fig1d.savefig(outputpath / 'Fig_1d.pdf', bbox_inches='tight')
+    fig1c.savefig(outputpath / 'Fig_1c.pdf', bbox_inches='tight')
 
 
 def pca_analysis(normal: np.ndarray, tumor: np.ndarray,
@@ -230,45 +230,50 @@ def pca_analysis(normal: np.ndarray, tumor: np.ndarray,
     fig1a, ax1a = plt.subplots()
 
     ax1a.scatter(projection[0, :i1], projection[1, :i1], s=15, label="N", c=normal_color)
-    ax1a.scatter(projection[0, i1:i2], projection[1, i1:i2], s=15, label="GBM", c=tumor_color)
-    ax1a.scatter(projection[0, i2:i3], projection[1, i2:i3], s=15, label="O", c=old_color)
+    ax1a.scatter(projection[0, i1:i2], projection[1, i1:i2], s=15, label="GBM", c=tumor_color, marker='s')
+    ax1a.scatter(projection[0, i2:i3], projection[1, i2:i3], s=15, label="O", c=old_color, marker='s')
     ax1a.scatter(projection[0, i3:], projection[1, i3:], s=15, label="AD", c=alz_color)
 
     ax1a.set_title('a')
-    ax1a.grid()
     ax1a.set_xlabel(f'PC1 ({eigenvalues_normalized[0]*100:.2f} %)')
     ax1a.set_ylabel(f'PC2 ({eigenvalues_normalized[1]*100:.2f} %)')
     ax1a.legend()
 
-    # Fig 1b (PC3-PC2)
-    fig1b, ax1b = plt.subplots()
-
-    ax1b.scatter(projection[2, :i1], projection[1, :i1], s=15, label="N", c=normal_color)
-    ax1b.scatter(projection[2, i1:i2], projection[1, i1:i2], s=15, label="GBM", c=tumor_color)
-    ax1b.scatter(projection[2, i2:i3], projection[1, i2:i3], s=15, label="O", c=old_color)
-    ax1b.scatter(projection[2, i3:], projection[1, i3:], s=15, label="AD", c=alz_color)
-
-    ax1b.set_title('b')
-    ax1b.grid()
-    ax1b.set_xlabel(f'PC3 ({eigenvalues_normalized[2]*100:.2f} %)')
-    ax1b.set_ylabel(f'PC2 ({eigenvalues_normalized[1]*100:.2f} %)')
-    ax1b.legend()
-
-    # Fig 1c
-    figure_1c(projection[:2, :i1], projection[:2, i1:i2],
+    # Fig 1b
+    figure_1b(projection[:2, :i1], projection[:2, i1:i2],
               projection[:2, i2:i3], projection[:2, i3:], outputpath)
     
-    # Fig 1d
-    figure_1d(projection[:2, :i1], projection[:2, i1:i2], projection[:2, i3:],
+    # Fig 1c
+    figure_1c(projection[:2, :i1], projection[:2, i1:i2], projection[:2, i3:],
               outputpath)
 
     # Exporting data
     fig1a.savefig(outputpath / 'Fig_1a.pdf', bbox_inches='tight')
-    fig1b.savefig(outputpath / 'Fig_1b.pdf', bbox_inches='tight')
 
     save_n_comp(outputpath / 'PC1.txt', eigenvectors[0], genes, 100)
     save_n_comp(outputpath / 'PC2.txt', eigenvectors[1], genes, 100)
-    save_n_comp(outputpath / 'PC3.txt', eigenvectors[2], genes, 100)
+
+
+def figure_1d(normal: np.ndarray, tumor: np.ndarray, alz: np.ndarray):
+    fig1d, ax1d = plt.subplots()
+    ube2c, mmp9 = 29900, 29913
+
+    groups = (['GBM'] * tumor.shape[0] * 2
+              + ['N'] * normal.shape[0] * 2
+              + ['AD'] * alz.shape[0] * 2)
+    
+    columns = np.concatenate([tumor[:, ube2c], tumor[:, mmp9], 
+                              normal[:, ube2c], normal[:, mmp9], 
+                              alz[:, ube2c], alz[:, mmp9]])
+    
+    categories = (['UBE3C'] * tumor.shape[0] + ['MMP9'] * tumor.shape[0]
+                + ['UBE3C'] * normal.shape[0] + ['MMP9'] * normal.shape[0]
+                + ['UBE3C'] * alz.shape[0] + ['MMP9'] * alz.shape[0])
+
+    sns.violinplot(x=groups, y=columns, hue=categories, inner='quart', ax=ax1d)
+    ax1d.set_ylabel('$log_2(e/e_{ref})$')
+
+    fig1d.savefig(outputpath / 'Fig_1d.pdf', bbox_inches='tight')
 
 
 def main():
@@ -299,6 +304,7 @@ def main():
 
     # geometry_analysis(normal, tumor, old, alz, symbols)
     pca_analysis(normal, tumor, old, alz, symbols)
+    figure_1d(normal, tumor, alz)
     plt.show()
 
 
