@@ -12,6 +12,8 @@ normal_color = 'dodgerblue'
 tumor_color = 'orangered'
 old_color = 'blue'
 alz_color = 'red'
+fontsize = 14
+tick_fontsize = 12
 
 gbm_sample_path: Path = Path(r'data/TCGA-GBM')
 gbm_path: Path = gbm_sample_path / 'data'
@@ -117,7 +119,7 @@ def save_n_comp(fname: str, vect: np.ndarray, genes: np.ndarray, n: Optional[int
     file.close()
 
 
-def figure_1b(normal: np.ndarray, tumor: np.ndarray, old: np.ndarray, alz: np.ndarray, outputpath: Path):
+def figure_1b(normal: np.ndarray, tumor: np.ndarray, old: np.ndarray, alz: np.ndarray):
     normal_center = normal.mean(axis=1)
     tumor_center = tumor.mean(axis=1)
     old_center = old.mean(axis=1)
@@ -172,9 +174,11 @@ def figure_1b(normal: np.ndarray, tumor: np.ndarray, old: np.ndarray, alz: np.nd
     ax1b.text(*((old_center + alz_center)/2 + (-5, 15)), 
               'Late AD', va='bottom', ha='center', weight='bold')
 
-    ax1b.set_xlabel('PC1')
-    ax1b.set_ylabel('PC2')
-    ax1b.set_title('c')
+    ax1b.set_xlabel('PC1', fontsize=fontsize)
+    ax1b.set_ylabel('PC2', fontsize=fontsize)
+    ax1b.set_title('b', fontsize=fontsize)
+    ax1b.tick_params(axis='x', labelsize=tick_fontsize)
+    ax1b.tick_params(axis='y', labelsize=tick_fontsize)
     ax1b.set(xlim=(-20, 270), ylim=(-180, 290))
 
     fig1b.savefig(outputpath / 'Fig_1b.pdf',  bbox_inches='tight')
@@ -187,7 +191,7 @@ def normal_dist(x: Union[float, np.ndarray],
     return np.exp(-np.power(x - x_mean, 2) / (2 * sigma*2))
 
 
-def figure_1c(normal: np.ndarray, tumor: np.ndarray, alz: np.ndarray, outputpath: Path):
+def figure_1c(normal: np.ndarray, tumor: np.ndarray, alz: np.ndarray):
     x = np.linspace(-180, 400, 100)
     y = np.linspace(-250, 330, 100)
     X, Y = np.meshgrid(x, y)
@@ -204,10 +208,16 @@ def figure_1c(normal: np.ndarray, tumor: np.ndarray, alz: np.ndarray, outputpath
     fig1c, ax1c = plt.subplots()
 
     ax1c.contour(X, Y, Z, levels=80, cmap='gray')
+
+    ax1c.annotate('N', xy=normal_center, c='r', va='bottom', ha='left', size=fontsize, weight='bold')
+    ax1c.annotate('GBM', xy=tumor_center, c='r', va='bottom', ha='left', size=fontsize, weight='bold')
+    ax1c.annotate('AD', xy=alz_center, c='r', va='bottom', ha='left', size=fontsize, weight='bold')
     
-    ax1c.set_title('d')
-    ax1c.set_xlabel('PC1')
-    ax1c.set_ylabel('PC2')
+    ax1c.set_title('c', fontsize=fontsize)
+    ax1c.set_xlabel('PC1', fontsize=fontsize)
+    ax1c.set_ylabel('PC2', fontsize=fontsize)
+    ax1c.tick_params(axis='x', labelsize=tick_fontsize)
+    ax1c.tick_params(axis='y', labelsize=tick_fontsize)
 
     fig1c.savefig(outputpath / 'Fig_1c.pdf', bbox_inches='tight')
 
@@ -235,17 +245,18 @@ def pca_analysis(normal: np.ndarray, tumor: np.ndarray,
     ax1a.scatter(projection[0, i3:], projection[1, i3:], s=15, label="AD", c=alz_color)
 
     ax1a.set_title('a')
-    ax1a.set_xlabel(f'PC1 ({eigenvalues_normalized[0]*100:.2f} %)')
-    ax1a.set_ylabel(f'PC2 ({eigenvalues_normalized[1]*100:.2f} %)')
-    ax1a.legend()
+    ax1a.set_xlabel(f'PC1 ({eigenvalues_normalized[0]*100:.2f}%)', fontsize=fontsize)
+    ax1a.set_ylabel(f'PC2 ({eigenvalues_normalized[1]*100:.2f}%)', fontsize=fontsize)
+    ax1a.legend(fontsize=fontsize)
+    ax1a.tick_params(axis='x', labelsize=tick_fontsize)
+    ax1a.tick_params(axis='y', labelsize=tick_fontsize)
 
     # Fig 1b
     figure_1b(projection[:2, :i1], projection[:2, i1:i2],
-              projection[:2, i2:i3], projection[:2, i3:], outputpath)
+              projection[:2, i2:i3], projection[:2, i3:])
     
     # Fig 1c
-    figure_1c(projection[:2, :i1], projection[:2, i1:i2], projection[:2, i3:],
-              outputpath)
+    figure_1c(projection[:2, :i1], projection[:2, i1:i2], projection[:2, i3:])
 
     # Exporting data
     fig1a.savefig(outputpath / 'Fig_1a.pdf', bbox_inches='tight')
@@ -271,7 +282,10 @@ def figure_1d(normal: np.ndarray, tumor: np.ndarray, alz: np.ndarray):
                 + ['UBE3C'] * alz.shape[0] + ['MMP9'] * alz.shape[0])
 
     sns.violinplot(x=groups, y=columns, hue=categories, inner='quart', ax=ax1d)
-    ax1d.set_ylabel('$log_2(e/e_{ref})$')
+    ax1d.set_ylabel('$log_2(e/e_{ref})$', fontsize=fontsize)
+    ax1d.tick_params(axis='x', labelsize=fontsize)
+    ax1d.tick_params(axis='y', labelsize=tick_fontsize)
+    ax1d.set_title('d', fontsize=fontsize)
 
     fig1d.savefig(outputpath / 'Fig_1d.pdf', bbox_inches='tight')
 
