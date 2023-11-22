@@ -260,6 +260,13 @@ def pca_analysis(normal: np.ndarray, tumor: np.ndarray,
     ax1a.scatter(projection[0, i3:], projection[1, i3:], label="AD",
                  c=alz_color, s=marker_size, alpha=alpha_value)
 
+    ax1a.set_title('a')
+    ax1a.set_xlabel(f'PC1 ({eigenvalues_normalized[0]*100:.2f}%)', fontsize=fontsize)
+    ax1a.set_ylabel(f'PC2 ({eigenvalues_normalized[1]*100:.2f}%)', fontsize=fontsize)
+    ax1a.legend(fontsize=fontsize)
+    ax1a.tick_params(axis='x', labelsize=tick_fontsize)
+    ax1a.tick_params(axis='y', labelsize=tick_fontsize)
+
     # Fig 1b
     figure_1b(projection[:2, :i1], projection[:2, i1:i2],
               projection[:2, i2:i3], projection[:2, i3:])
