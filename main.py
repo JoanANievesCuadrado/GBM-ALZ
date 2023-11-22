@@ -19,7 +19,7 @@ gbm_sample_path: Path = Path(r'data/TCGA-GBM')
 gbm_path: Path = gbm_sample_path / 'data'
 alz_path: Path = Path(r'data/ALZ')
 
-outputpath: Path = Path(r'output')
+outputpath: Path = Path(r'Figures and tables')
 if not outputpath.is_dir():
     outputpath.mkdir()
 
