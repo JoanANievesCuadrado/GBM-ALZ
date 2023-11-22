@@ -3,9 +3,10 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
+from matplotlib.patheffects import withStroke
 from pathlib import Path
 from scipy.stats.mstats import gmean
-from typing import List, Tuple, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 
 normal_color = 'dodgerblue'
@@ -207,11 +208,16 @@ def figure_1c(normal: np.ndarray, tumor: np.ndarray, alz: np.ndarray):
 
     fig1c, ax1c = plt.subplots()
 
+    white_outline = withStroke(linewidth=3, foreground='white')
+
     ax1c.contour(X, Y, Z, levels=80, cmap='gray')
 
-    ax1c.annotate('N', xy=normal_center, c='r', va='bottom', ha='left', size=fontsize, weight='bold')
-    ax1c.annotate('GBM', xy=tumor_center, c='r', va='bottom', ha='left', size=fontsize, weight='bold')
-    ax1c.annotate('AD', xy=alz_center, c='r', va='bottom', ha='left', size=fontsize, weight='bold')
+    ax1c.annotate('N', xy=normal_center, c=normal_color, va='bottom', ha='left', size=12,
+                  weight='bold', path_effects=[white_outline])
+    ax1c.annotate('GBM', xy=tumor_center, c=tumor_color, va='bottom', ha='left', size=12,
+                  weight='bold', path_effects=[white_outline])
+    ax1c.annotate('AD', xy=alz_center, c=alz_color, va='bottom', ha='left', size=12,
+                  weight='bold', path_effects=[white_outline])
     
     ax1c.set_title('c', fontsize=fontsize)
     ax1c.set_xlabel('PC1', fontsize=fontsize)
@@ -239,17 +245,20 @@ def pca_analysis(normal: np.ndarray, tumor: np.ndarray,
     # Fig 1a (PC1-PC2)
     fig1a, ax1a = plt.subplots()
 
-    ax1a.scatter(projection[0, :i1], projection[1, :i1], s=15, label="N", c=normal_color)
-    ax1a.scatter(projection[0, i1:i2], projection[1, i1:i2], s=15, label="GBM", c=tumor_color, marker='s')
-    ax1a.scatter(projection[0, i2:i3], projection[1, i2:i3], s=15, label="O", c=old_color, marker='s')
-    ax1a.scatter(projection[0, i3:], projection[1, i3:], s=15, label="AD", c=alz_color)
+    marker_size = 15
+    alpha_value = 0.7
 
-    ax1a.set_title('a')
-    ax1a.set_xlabel(f'PC1 ({eigenvalues_normalized[0]*100:.2f}%)', fontsize=fontsize)
-    ax1a.set_ylabel(f'PC2 ({eigenvalues_normalized[1]*100:.2f}%)', fontsize=fontsize)
-    ax1a.legend(fontsize=fontsize)
-    ax1a.tick_params(axis='x', labelsize=tick_fontsize)
-    ax1a.tick_params(axis='y', labelsize=tick_fontsize)
+    ax1a.scatter(projection[0, :i1], projection[1, :i1], label="N",
+                 c=normal_color, s=marker_size, alpha=alpha_value)
+    
+    ax1a.scatter(projection[0, i1:i2], projection[1, i1:i2], label="GBM",
+                 c=tumor_color, s=marker_size, marker='s', alpha=alpha_value)
+    
+    ax1a.scatter(projection[0, i2:i3], projection[1, i2:i3], label="O",
+                 c=old_color, s=marker_size, marker='s', alpha=alpha_value)
+    
+    ax1a.scatter(projection[0, i3:], projection[1, i3:], label="AD",
+                 c=alz_color, s=marker_size, alpha=alpha_value)
 
     # Fig 1b
     figure_1b(projection[:2, :i1], projection[:2, i1:i2],
