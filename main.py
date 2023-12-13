@@ -293,9 +293,9 @@ def figure_1d(normal: np.ndarray, tumor: np.ndarray, alz: np.ndarray):
                               normal[:, ube2c], normal[:, mmp9], 
                               alz[:, ube2c], alz[:, mmp9]])
     
-    categories = (['UBE3C'] * tumor.shape[0] + ['MMP9'] * tumor.shape[0]
-                + ['UBE3C'] * normal.shape[0] + ['MMP9'] * normal.shape[0]
-                + ['UBE3C'] * alz.shape[0] + ['MMP9'] * alz.shape[0])
+    categories = (['UBE2C'] * tumor.shape[0] + ['MMP9'] * tumor.shape[0]
+                + ['UBE2C'] * normal.shape[0] + ['MMP9'] * normal.shape[0]
+                + ['UBE2C'] * alz.shape[0] + ['MMP9'] * alz.shape[0])
 
     sns.violinplot(x=groups, y=columns, hue=categories, inner='quart', ax=ax1d)
     ax1d.set_ylabel('$log_2(e/e_{ref})$', fontsize=fontsize)
