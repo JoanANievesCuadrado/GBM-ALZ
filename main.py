@@ -281,21 +281,37 @@ def pca_analysis(normal: np.ndarray, tumor: np.ndarray,
     save_n_comp(outputpath / 'PC2.txt', eigenvectors[1], genes, 100)
 
 
-def figure_1d(normal: np.ndarray, tumor: np.ndarray, alz: np.ndarray):
+def figure_1d(normal: np.ndarray, tumor: np.ndarray, alz: np.ndarray, genes: List, symbols: np.ndarray):
     fig1d, ax1d = plt.subplots()
-    ube2c, mmp9 = 29900, 29913
+    
+    gene_id = []
+    gene_name = []
+    for g in genes:
+        gene_id.append(np.argwhere(symbols == g)[0, 0])
+        gene_name.append(g)
+    
+    n_genes = len(gene_id)
 
-    groups = (['GB'] * tumor.shape[0] * 2
-              + ['N'] * normal.shape[0] * 2
-              + ['AD'] * alz.shape[0] * 2)
+    groups = (['GB'] * tumor.shape[0] * n_genes
+              + ['N'] * normal.shape[0] * n_genes
+              + ['AD'] * alz.shape[0] * n_genes)
     
-    columns = np.concatenate([tumor[:, ube2c], tumor[:, mmp9], 
-                              normal[:, ube2c], normal[:, mmp9], 
-                              alz[:, ube2c], alz[:, mmp9]])
+    columns_tumor = np.concatenate([tumor[:, gid] for gid in gene_id])
+    columns_normal = np.concatenate([normal[:, gid] for gid in gene_id])
+    columns_alz = np.concatenate([alz[:, gid] for gid in gene_id])
+    columns = np.concatenate([
+        columns_tumor,
+        columns_normal,
+        columns_alz,
+    ])
     
-    categories = (['UBE2C'] * tumor.shape[0] + ['MMP9'] * tumor.shape[0]
-                + ['UBE2C'] * normal.shape[0] + ['MMP9'] * normal.shape[0]
-                + ['UBE2C'] * alz.shape[0] + ['MMP9'] * alz.shape[0])
+    categories = []
+    for gn in gene_name:
+        categories += [gn] * tumor.shape[0]
+    for gn in gene_name:
+        categories += [gn] * normal.shape[0]
+    for gn in gene_name:
+        categories += [gn] * alz.shape[0]
 
     sns.violinplot(x=groups, y=columns, hue=categories, inner='quart', ax=ax1d)
     ax1d.set_ylabel('$log_2(e/e_{ref})$', fontsize=fontsize)
@@ -334,7 +350,7 @@ def main():
 
     # geometry_analysis(normal, tumor, old, alz, symbols)
     pca_analysis(normal, tumor, old, alz, symbols)
-    figure_1d(normal, tumor, alz)
+    figure_1d(normal, tumor, alz, ['UBE2C', 'BCYRN1'], symbols)
     plt.show()
 
 
