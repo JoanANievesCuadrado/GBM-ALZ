@@ -165,4 +165,5 @@ cython_debug/
 # Data files
 data/ALZ/fpkm_table_normalized.csv
 data/TCGA-GBM/data/
+data/Mouse/data/
 .vscode/
