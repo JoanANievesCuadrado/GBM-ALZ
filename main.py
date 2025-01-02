@@ -169,7 +169,6 @@ def figure_1b(normal: np.ndarray, tumor: np.ndarray, old: np.ndarray, alz: np.nd
 
     ax1b.annotate('Early\nAD',  xy=alz_center/2 + (50, 15), weight='bold')
 
-    # ax1b.text(285, 75, "Aging", ha='left', va='top', weight='bold')
     ax1b.annotate('Aging', xy=old_center/2 + (130, -5), weight='bold', ha='right', va='bottom')
 
     ax1b.text(*((old_center + alz_center)/2 + (-5, 15)), 
@@ -183,6 +182,72 @@ def figure_1b(normal: np.ndarray, tumor: np.ndarray, old: np.ndarray, alz: np.nd
     ax1b.set(xlim=(-20, 270), ylim=(-180, 290))
 
     fig1b.savefig(outputpath / 'Fig_1b.pdf',  bbox_inches='tight')
+
+
+def graphical_abstract(normal: np.ndarray, tumor: np.ndarray, old: np.ndarray, alz: np.ndarray):
+    normal_center = normal.mean(axis=1)
+    tumor_center = tumor.mean(axis=1)
+    old_center = old.mean(axis=1)
+    alz_center = alz.mean(axis=1)
+
+    fig_ga, ax_ga = plt.subplots()
+
+    ax_ga.scatter(*normal_center, marker='o', c=normal_color, s=50, label='N')
+    ax_ga.scatter(*tumor_center, marker='o', c=tumor_color, s=50, label='GB')
+    ax_ga.scatter(*old_center, marker='o', c=old_color, s=50, label='O')
+    ax_ga.scatter(*alz_center, marker='o', c=alz_color, s=50, label='AD')
+
+    # Arrow from normal to tumor center
+    ax_ga.annotate('', xy=tumor_center, xytext=normal_center,
+                  arrowprops=dict(arrowstyle='->', shrinkA=4.5, shrinkB=3.9,
+                                  connectionstyle="arc, angleA=-1, armA=0,"
+                                  "angleB=100, armB=60, rad=50"))
+
+    # Arrow from normal to old center
+    ax_ga.annotate('', xy=old_center, xytext=normal_center,
+                  arrowprops=dict(arrowstyle='->', shrinkA=4.5, shrinkB=3.9,
+                                  connectionstyle="arc, angleA=1, armA=0,"
+                                  "angleB=-100, armB=90, rad=80"))
+
+    # Arrow from normal to alzheimer center
+    ax_ga.annotate('', xy=alz_center, xytext=normal_center,
+                  arrowprops=dict(arrowstyle='->', shrinkA=4.5, shrinkB=3.9,
+                                  connectionstyle="arc, angleA=2, armA=0,"
+                                  "angleB=-115, armB=90, rad=90"))
+    
+    # Arrow from old to alzheimer center
+    ax_ga.annotate('', xy=alz_center, xytext=old_center,
+                  arrowprops=dict(arrowstyle='->', shrinkA=4.5, shrinkB=3.9))
+    
+    ax_ga.annotate('N', xy=normal_center + (-4, -10),
+                  c='k',  size=12, va='top', ha='right', weight='bold')
+
+    ax_ga.annotate('GB', xy=tumor_center + (-10, 25),
+                  c='k', size=12, va='top', ha='right', weight='bold')
+
+    ax_ga.annotate('O', xy=old_center + (10, -12),
+                  c='k',  size=12, va='center', ha='left',  weight='bold')
+
+    ax_ga.annotate('AD', xy=alz_center + (-15, 0),
+                  c='k', size=12, va='top', ha='right', weight='bold')
+
+    ax_ga.annotate('Early\nAD',  xy=alz_center/2 + (50, 15), weight='bold')
+
+    # ax_ga.text(285, 75, "Aging", ha='left', va='top', weight='bold')
+    ax_ga.annotate('Aging', xy=old_center/2 + (130, -5), weight='bold', ha='right', va='bottom')
+
+    ax_ga.text(*((old_center + alz_center)/2 + (-5, 15)), 
+              'Late AD', va='bottom', ha='center', weight='bold')
+
+    # ax_ga.tick_params(axis='x', labelsize=tick_fontsize)
+    ax_ga.tick_params(axis='both', which='both', length=0)
+    ax_ga.set_xticklabels([])
+    ax_ga.set_yticklabels([])
+    ax_ga.set_xlabel('Aging axis', fontsize=fontsize)
+    ax_ga.set_ylabel('GB vs. AD axis', fontsize=fontsize)
+    ax_ga.set(xlim=(-20, 270), ylim=(-180, 290))
+
+    fig_ga.savefig(outputpath / 'graphical_abstract.pdf',  bbox_inches='tight')
 
 
 def normal_dist(x: Union[float, np.ndarray],
@@ -273,6 +338,10 @@ def pca_analysis(normal: np.ndarray, tumor: np.ndarray,
     
     # Fig 1c
     figure_1c(projection[:2, :i1], projection[:2, i1:i2], projection[:2, i3:])
+
+    # Graphical Abstract
+    graphical_abstract(projection[:2, :i1], projection[:2, i1:i2],
+                       projection[:2, i2:i3], projection[:2, i3:])
 
     # Exporting data
     fig1a.savefig(outputpath / 'Fig_1a.pdf', bbox_inches='tight')
