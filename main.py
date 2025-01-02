@@ -129,7 +129,7 @@ def figure_1b(normal: np.ndarray, tumor: np.ndarray, old: np.ndarray, alz: np.nd
     fig1b, ax1b = plt.subplots()
 
     ax1b.scatter(*normal_center, marker='o', c=normal_color, s=50, label='N')
-    ax1b.scatter(*tumor_center, marker='o', c=tumor_color, s=50, label='GBM')
+    ax1b.scatter(*tumor_center, marker='o', c=tumor_color, s=50, label='GB')
     ax1b.scatter(*old_center, marker='o', c=old_color, s=50, label='O')
     ax1b.scatter(*alz_center, marker='o', c=alz_color, s=50, label='AD')
 
@@ -158,7 +158,7 @@ def figure_1b(normal: np.ndarray, tumor: np.ndarray, old: np.ndarray, alz: np.nd
     ax1b.annotate('N', xy=normal_center + (-4, -10),
                   c='k',  size=12, va='top', ha='right', weight='bold')
 
-    ax1b.annotate('GBM', xy=tumor_center + (-10, 25),
+    ax1b.annotate('GB', xy=tumor_center + (-10, 25),
                   c='k', size=12, va='top', ha='right', weight='bold')
 
     ax1b.annotate('O', xy=old_center + (10, -12),
@@ -214,7 +214,7 @@ def figure_1c(normal: np.ndarray, tumor: np.ndarray, alz: np.ndarray):
 
     ax1c.annotate('N', xy=normal_center, c=normal_color, va='bottom', ha='left', size=12,
                   weight='bold', path_effects=[white_outline])
-    ax1c.annotate('GBM', xy=tumor_center, c=tumor_color, va='bottom', ha='left', size=12,
+    ax1c.annotate('GB', xy=tumor_center, c=tumor_color, va='bottom', ha='left', size=12,
                   weight='bold', path_effects=[white_outline])
     ax1c.annotate('AD', xy=alz_center, c=alz_color, va='bottom', ha='left', size=12,
                   weight='bold', path_effects=[white_outline])
@@ -251,7 +251,7 @@ def pca_analysis(normal: np.ndarray, tumor: np.ndarray,
     ax1a.scatter(projection[0, :i1], projection[1, :i1], label="N",
                  c=normal_color, s=marker_size, alpha=alpha_value)
     
-    ax1a.scatter(projection[0, i1:i2], projection[1, i1:i2], label="GBM",
+    ax1a.scatter(projection[0, i1:i2], projection[1, i1:i2], label="GB",
                  c=tumor_color, s=marker_size, marker='s', alpha=alpha_value)
     
     ax1a.scatter(projection[0, i2:i3], projection[1, i2:i3], label="O",
@@ -285,7 +285,7 @@ def figure_1d(normal: np.ndarray, tumor: np.ndarray, alz: np.ndarray):
     fig1d, ax1d = plt.subplots()
     ube2c, mmp9 = 29900, 29913
 
-    groups = (['GBM'] * tumor.shape[0] * 2
+    groups = (['GB'] * tumor.shape[0] * 2
               + ['N'] * normal.shape[0] * 2
               + ['AD'] * alz.shape[0] * 2)
     
