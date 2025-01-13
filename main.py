@@ -419,7 +419,7 @@ def main():
 
     # geometry_analysis(normal, tumor, old, alz, symbols)
     pca_analysis(normal, tumor, old, alz, symbols)
-    figure_1d(normal, tumor, alz, ['UBE2C', 'BCYRN1'], symbols)
+    figure_1d(normal, tumor, alz, ['MMP9', 'BCYRN1'], symbols)
     plt.show()
 
 
