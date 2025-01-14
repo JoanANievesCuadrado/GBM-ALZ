@@ -1,4 +1,4 @@
-# GBM-ALZ
+# GB-ALZ
 
 This repository contains the data and algorithms used in the preprint [10.1101/2023.11.23.568350](https://doi.org/10.1101/2023.11.23.568350).
 
@@ -16,7 +16,7 @@ This repository contains the data and algorithms used in the preprint [10.1101/2
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/JoanANievesCuadrado/GBM-ALZ.git
+    git clone https://github.com/JoanANievesCuadrado/GB_vs_AD.git
     ```
 2. Go to the `data` folder and extract the files from each of the databases.
 3. Create a virtual environment:
